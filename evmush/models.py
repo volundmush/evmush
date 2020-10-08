@@ -79,8 +79,26 @@ class LockFlag(SharedMemoryModel, BaseProperty, HasPerms):
     db_letter = models.CharField(max_length=1, null=True, unique=True)
 
 
+class FuncFlag(SharedMemoryModel):
+    pass
+
+
 class CmdFlag(SharedMemoryModel, BaseProperty):
     pass
+
+
+class MushCmd(SharedMemoryModel, BaseProperty):
+    db_lock = models.CharField(max_length=255, null=False, default="#TRUE")
+    db_flags = models.ManyToManyField('evmush.CmdFlag', related_name='cmds')
+    db_restricts = models.ManyToManyField('evmush.Restriction', related_name='cmds')
+    db_path = models.CharField(max_length=255, null=True)
+    # Hooks are not stored in the database... they must be created via softcode and usually run at startup
+
+
+class MushFnc(SharedMemoryModel, BaseProperty):
+    db_flags = models.ManyToManyField('evmush.FuncFlag', related_name='functions')
+    db_restrict = models.ManyToManyField('evmush.Restriction', related_name='functions')
+    db_path = models.CharField(max_length=255, null=True)
 
 
 class LockType(SharedMemoryModel):
@@ -143,7 +161,7 @@ class BoardDB(TypedObject):
 
 
 class BBSPost(SharedMemoryModel):
-    db_poster = models.ForeignKey('accounts.AccountDB', related_name='+', on_delete=models.PROTECT)
+    db_poster = models.ForeignKey('evmush.Actor', null=True, related_name='+', on_delete=models.PROTECT)
     db_name = models.CharField(max_length=255, blank=False, null=False)
     db_came = models.CharField(max_length=255, blank=False, null=False)
     db_date_created = models.DateTimeField(null=False)
