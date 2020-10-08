@@ -3,7 +3,7 @@ import re
 from evennia.utils.ansi import ANSI_PARSER
 from evennia.utils.ansi import ANSIString
 
-import athanor
+import evmush
 
 
 def clean_and_ansi(input_text, thing_name="Name"):
@@ -121,7 +121,7 @@ def mxp(text="", command="", hints=""):
         return ANSIString("|lc%s|lt%s|le" % (command, command))
 
 
-class Speech(object):
+class Speech:
     """
     This class is used for rendering an entity's speech to other viewers.
     It is meant to render speech from a player or character. The output replicates MUSH-style
@@ -140,7 +140,7 @@ class Speech(object):
     def __init__(self, speaker=None, speech_text=None, alternate_name=None, title=None, mode='ooc', targets=None,
                  rendered_text=None, action_string="says", controller="character", color_mode='channel'):
 
-        self.controller = athanor.CONTROLLER_MANAGER.get(controller)
+        self.controller = evmush.api.get(controller)
         if targets:
             self.targets = [f'^^^{char.id}:{char.key}^^^' for char in targets]
         else:

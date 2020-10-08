@@ -4,6 +4,37 @@ from django.db import models
 from evennia.typeclasses.models import SharedMemoryModel, TypedObject
 
 
+class Pluginspace(SharedMemoryModel):
+    """
+    This model holds database references to all of the EvMUSH Plugins that have ever been
+    installed, in case data must be removed.
+    """
+    # The name is something like 'athanor' or 'mod_name'. It is an unchanging identifier which
+    # uniquely signifies this plugin across all of its versions. It must never change, once established,
+    # without a careful migration.
+    db_name = models.CharField(max_length=255, null=False, blank=False, unique=True)
+
+
+class Namespace(SharedMemoryModel):
+    db_name = models.CharField(max_length=255, null=False, blank=False, unique=True)
+
+    def __repr__(self):
+        return f"<Namespace({self.pk}): {self.db_name}>"
+
+    def __str__(self):
+        return repr(self)
+
+
+class MushCategory(SharedMemoryModel):
+    db_name = models.CharField(max_length=255, null=False, blank=False, unique=True)
+
+    def __repr__(self):
+        return f"<MushCategory({self.pk}): {self.db_name}>"
+
+    def __str__(self):
+        return repr(self)
+
+
 class HostAddress(models.Model):
     host_ip = models.GenericIPAddressField(null=False)
     host_name = models.TextField(null=True)
@@ -25,8 +56,11 @@ class Actor(SharedMemoryModel):
 
 
 class MushObject(SharedMemoryModel):
-    db_category = models.CharField(max_length=30, null=False)
+    db_category = models.ForeignKey(MushCategory, related_name='objects', null=False, on_delete=models.PROTECT)
     db_objid = models.CharField(max_length=255, null=False)
+    db_name = models.CharField(max_length=255, null=False)
+    db_iname = models.CharField(max_length=255, null=False)
+    db_namespace = models.ForeignKey(Namespace, related_name='objects', null=True, on_delete=models.PROTECT)
     db_timestamp_created = models.IntegerField(null=False)
     db_timestamp_modified = models.IntegerField(null=False)
     db_parent = models.ForeignKey('self', null=True, related_name='children', on_delete=models.SET_NULL)
@@ -41,7 +75,8 @@ class MushObject(SharedMemoryModel):
     inner = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        unique_together = (('db_category', 'db_objid'), ('content_type', 'object_id'), ('db_abbr_category', 'db_abbr'))
+        unique_together = (('db_category', 'db_objid'), ('content_type', 'object_id'), ('db_abbr_category', 'db_abbr'),
+                           ('db_namespace', 'db_iname'))
 
 
 class BaseProperty(models.Model):

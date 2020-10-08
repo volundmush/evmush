@@ -2,13 +2,13 @@ from django.conf import settings
 
 from evennia.utils.logger import log_trace
 from evennia.utils.utils import class_from_module
-from athanor.utils.online import admin_accounts
+from evmush.utils.online import admin_accounts
 
 
 class ControllerManager:
 
-    def __init__(self):
-        self.loaded = False
+    def __init__(self, api):
+        self.api = api
         self.controllers = dict()
 
     def load(self):
@@ -16,11 +16,8 @@ class ControllerManager:
             con_class = class_from_module(controller_def.get("class", settings.BASE_CONTROLLER_CLASS))
             backend = class_from_module(controller_def.get('backend'))
             self.controllers[controller_key] = con_class(controller_key, self, backend)
-        self.loaded = True
 
     def get(self, con_key):
-        if not self.loaded:
-            self.load()
         if not (found := self.controllers.get(con_key, None)):
             raise ValueError("Controller not found!")
         if not found.loaded:
@@ -28,7 +25,7 @@ class ControllerManager:
         return found
 
 
-class AthanorController:
+class EvMUSHController:
     system_name = None
 
     def __init__(self, key, manager, backend):
@@ -63,7 +60,7 @@ class AthanorController:
         pass
 
 
-class AthanorControllerBackend:
+class EvMUSHControllerBackend:
     typeclass_defs = list()
 
     def __init__(self, frontend):
