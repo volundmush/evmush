@@ -60,6 +60,7 @@ class MushObject(SharedMemoryModel):
     db_objid = models.CharField(max_length=255, null=False)
     db_name = models.CharField(max_length=255, null=False)
     db_iname = models.CharField(max_length=255, null=False)
+    db_altname = models.CharField(max_length=255, null=True)
     db_namespace = models.ForeignKey(Namespace, related_name='objects', null=True, on_delete=models.PROTECT)
     db_timestamp_created = models.IntegerField(null=False)
     db_timestamp_modified = models.IntegerField(null=False)

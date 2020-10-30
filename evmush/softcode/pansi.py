@@ -1,35 +1,37 @@
-from . import markup as m
+import evmush.softcode.markup as m
 
 
 class PMarkup:
 
-    def __init__(self, pansi, idx: int, pidx, standalone: bool, code: str):
+    def __init__(self, pansi, parent, standalone: bool, code: str):
         self.pansi = pansi
-        self.idx = idx
-        self.pidx = pidx
         self.children = list()
-        self.parent = pansi.markup[pidx] if pidx else None
+        self.parent = parent
         if self.parent:
             self.parent.children.append(self)
         self.standalone = standalone
         self.code = code
         self.start_text = ""
         self.end_text = ""
-        self.start_pos = 0
-        self.end_pos = 0
-
-    def auto_close(self, pos):
-        self.end_pos = pos
 
 
 class PAnsiString:
 
     def __init__(self, src: str):
-        self.source = src
+        self.source = src if src else ""
         self.clean = ""
         self.markup = list()
         self.markup_idx_map = list()
-        state, pos, index = 0, 0, None
+        if src:
+            self.from_raw(src)
+
+    def from_raw(self, src: str):
+        self.source = src
+        self.clean = ""
+        self.markup.clear()
+        self.markup_idx_map.clear()
+
+        state, index = 0, None
         mstack = list()
         tag = ""
 
@@ -40,7 +42,6 @@ class PAnsiString:
                 else:
                     self.clean += s
                     self.markup_idx_map.append(index)
-                    pos += 1
                 continue
             if state == 1:
                 # Encountered a TAG START...
@@ -53,10 +54,8 @@ class PAnsiString:
                     state = 4
                 else:
                     state = 3
-                    mark = PMarkup(self, len(self.markup), index, False, tag)
-                    mark.start_pos = pos
-                    self.markup.append(mark)
-                    index = len(self.markup)-1
+                    mark = PMarkup(self, index, False, tag)
+                    index = mark
                     mstack.append(mark)
                 continue
             if state == 3:
@@ -71,11 +70,7 @@ class PAnsiString:
                 if s == m.TAG_END:
                     state = 0
                     mark = mstack.pop()
-                    mark.end_pos = pos
-                    index = mark.pidx
+                    index = mark.parent
                 else:
                     mstack[-1].end_text += s
                 continue
-
-        for m in reversed(mstack):
-            m.auto_close(pos)
